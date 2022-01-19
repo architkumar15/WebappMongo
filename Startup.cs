@@ -18,6 +18,8 @@ using Microsoft.Extensions.Options;
 using WebappMongo.Controllers;
 using Bookstore.core;
 using WebappMongo.DAL.Collection;
+using AutoMapper;
+using WebappMongo.Model.AutoMapper;
 
 namespace WebappMongo
 {
@@ -34,6 +36,15 @@ namespace WebappMongo
         public void ConfigureServices(IServiceCollection services)
         {
 
+
+            // Auto Mapper Configurations
+
+            var mappingConfig = new MapperConfiguration(mc =>
+            {
+                mc.AddProfile(new MappingProfile());
+            });
+            IMapper mapper = mappingConfig.CreateMapper();
+            services.AddSingleton(mapper);
             services.AddTransient< IBookServices ,BookServices > ();
             services.AddControllers();
             services.AddSwaggerGen(c =>
@@ -56,10 +67,13 @@ namespace WebappMongo
 
             services.Configure<RestaurantDatabaseSettings>(
                 Configuration.GetSection(nameof(RestaurantDatabaseSettings)));
-           
-
             services.AddSingleton<IRestaurantDatabaseSettings>(sp =>
                 sp.GetRequiredService<IOptions<RestaurantDatabaseSettings>>().Value);
+
+            services.Configure<DeveloperDatabaseSettings>(
+               Configuration.GetSection(nameof(DeveloperDatabaseSettings)));
+            services.AddSingleton<IDeveloperDatabaseSettings>(sp =>
+                sp.GetRequiredService<IOptions<DeveloperDatabaseSettings>>().Value);
 
             services.Configure<BooksDatabaseSettings>(
              Configuration.GetSection(nameof(BooksDatabaseSettings)));

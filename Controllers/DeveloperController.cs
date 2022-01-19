@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using WebappMongo.Model.Developer;
 using WebappMongo.DAL.Collection;
 using WebappMongo.DAL.DbSettings;
+using AutoMapper;
 
 namespace WebappMongo.Controllers
 {
@@ -17,74 +18,109 @@ namespace WebappMongo.Controllers
     [Route("Developer")]
     public class DeveloperController : Controller
     {
-
+        private readonly IMongoCollection<DeveloperModel> _developer;
+        private readonly IMapper _mapper;
         private IConfiguration _configuration;
-        public DeveloperController(IConfiguration configuration)
+        public DeveloperController(IConfiguration configuration, IDeveloperDatabaseSettings settings, IMapper mapper)
         {
+
+            _mapper = mapper;
             _configuration = configuration;
+            var client = new MongoClient(settings.ConnectionString);
+            var database = client.GetDatabase(settings.DatabaseName);
+            _developer = database.GetCollection<DeveloperModel>(settings.DevCollectionName);
         }
 
 
         [HttpGet]
         public JsonResult Get()
         {
-            
-                var settings = MongoClientSettings.FromConnectionString("mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false");
-                var client = new MongoClient(settings);
-                var database = client.GetDatabase("DeveloperDb");
-                var dbList = database.GetCollection<DeveloperCollection>("Aspdev").AsQueryable();
-                return new JsonResult(dbList); 
-            
+            try
+            {
+                var dbList = _developer.AsQueryable();
+                var userViewModel = _mapper.Map<DeveloperCollection>(dbList);
+                return new JsonResult(userViewModel);
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(ex.Message);
+            }
+
         }
 
         [HttpPost]
-        public JsonResult Post(DeveloperModel dep)
+        public JsonResult Post(PostDeveloperModel dep)
         {
-            var settings = MongoClientSettings.FromConnectionString("mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false");
-            var client = new MongoClient(settings);
-            var datacount = client.GetDatabase("DeveloperDb").GetCollection<DeveloperCollection>("Aspdev").AsQueryable().Count();
-            if (datacount != 0)
+            try
             {
-                DeveloperCollection newcollection = new DeveloperCollection()
+                DeveloperModel newcollection = new DeveloperModel()
                 {
                     Name = dep.Name,
                     From = dep.From,
                     mobileNo = dep.mobileNo,
                     IsActive = dep.IsActive,
                 };
-                client.GetDatabase("DeveloperDb").GetCollection<DeveloperCollection>("Aspdev").InsertOne(newcollection);
+                _developer.InsertOne(newcollection);
                 return new JsonResult("Added Successfully");
             }
-            else
+            catch(Exception ex)
             {
-                return new JsonResult(" Data not submited");
+                return new JsonResult(ex.Message);
+
             }
+
         }
 
         [HttpPut]
         public JsonResult Put(double mobileNo, UpdateDeveloperModel dep)
         {
+            try
+            {
+                var datacount = _developer.AsQueryable().Count();
+                if (datacount != 0)
+                {
+                    var filter = Builders<DeveloperModel>.Filter.Eq("mobileNo", mobileNo);
+                    var updateName = Builders<DeveloperModel>.Update.Set("Name", dep.Name);
 
-            var filter = Builders<DeveloperCollection>.Filter.Eq("mobileNo", mobileNo);
-            var updateName = Builders<DeveloperCollection>.Update.Set("Name", dep.Name);
-            var settings = MongoClientSettings.FromConnectionString("mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false");
-            var client = new MongoClient(settings);
-            var database = client.GetDatabase("DeveloperDb");
-            database.GetCollection<DeveloperCollection>("Aspdev").UpdateMany(filter, updateName);
-            return new JsonResult("Updated Successfully");
+                    _developer.UpdateMany(filter, updateName);
+                    return new JsonResult("Updated Successfully");
+                }
+                else
+                {
+                    return new JsonResult("No data found");
+                }
+            }
+            catch(Exception ex)
+            {
+                return new JsonResult(ex.Message);
+
+            }
         }
 
         [HttpDelete]
         public JsonResult Delete(double mobileNo)
         {
+            try
+            {
+                var datacount = _developer.AsQueryable().Count();
+                if (datacount != 0)
+                {
+                    var filter = Builders<DeveloperModel>.Filter.Eq("mobileNo", mobileNo);
+                    _developer.DeleteOne(filter);
 
-            var filter = Builders<DeveloperCollection>.Filter.Eq("mobileNo", mobileNo);
-            var settings = MongoClientSettings.FromConnectionString("mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false");
-            var client = new MongoClient(settings);
-            var database = client.GetDatabase("DeveloperDb");
-            database.GetCollection<DeveloperCollection>("Aspdev").DeleteOne(filter);
+                    return new JsonResult("Deleted Successfully");
+                }
+                else
+                {
+                    return new JsonResult("No Data Found");
 
-            return new JsonResult("Deleted Successfully");
+                }
+            }
+            catch(Exception ex)
+            {
+                return new JsonResult(ex.Message);
+
+            }
         }
 
     }

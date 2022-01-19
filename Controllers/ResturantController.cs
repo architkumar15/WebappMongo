@@ -50,7 +50,6 @@ namespace WebappMongo.Controllers
         }
 
 
-
         [HttpPost]
         public JsonResult Post(PostResturantModel rep)
         {
@@ -73,7 +72,6 @@ namespace WebappMongo.Controllers
             {
                 return new JsonResult(ex.Message);
             }
-
         }
 
 
@@ -103,17 +101,13 @@ namespace WebappMongo.Controllers
             {
                 var filter = Builders<ResturantModel>.Filter.Eq("Name", Name);
                 _restaurants.DeleteOne(filter);
-
                 return new JsonResult("Deleted Successfully");
-
             }
             catch (Exception ex)
             {
                 return new JsonResult(ex.Message);
 
             }
-
-
         }
     }
 }
