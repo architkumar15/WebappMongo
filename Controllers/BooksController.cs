@@ -19,6 +19,7 @@ namespace WebappMongo.DAL.Collection
         }
 
         [HttpGet]
+        
         public IActionResult GetBooks()
         {
             return Ok(_bookServices.GetBooks());

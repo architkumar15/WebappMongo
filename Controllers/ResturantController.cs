@@ -32,6 +32,7 @@ namespace WebappMongo.Controllers
             _restaurants = database.GetCollection<ResturantModel>(settings.ResCollectionName);
         }
 
+
         [HttpGet]
         [Route("GetResturant")]
         public JsonResult Get()
@@ -44,10 +45,11 @@ namespace WebappMongo.Controllers
             catch (Exception ex)
             {
                 return new JsonResult(ex.Message);
-
             }
 
         }
+
+
 
         [HttpPost]
         public JsonResult Post(PostResturantModel rep)
@@ -62,7 +64,6 @@ namespace WebappMongo.Controllers
                     Grades = rep.Grades,
                     Name = rep.Name,
                     ResturantId = rep.ResturantId
-
                 };
                 _restaurants.InsertOne(NewDocument);
 
@@ -71,7 +72,6 @@ namespace WebappMongo.Controllers
             catch (Exception ex)
             {
                 return new JsonResult(ex.Message);
-
             }
 
         }
@@ -80,7 +80,6 @@ namespace WebappMongo.Controllers
         [HttpPut]
         public JsonResult Put(string Name, UpdateResturantModel rep)
         {
-
             try
             {
                 var filter = Builders<ResturantModel>.Filter.Eq("Name", Name);
@@ -95,12 +94,14 @@ namespace WebappMongo.Controllers
 
         }
 
+
+
         [HttpDelete]
-        public JsonResult Delete(ObjectId id)
+        public JsonResult Delete(string Name)
         {
             try
             {
-                var filter = Builders<ResturantModel>.Filter.Eq("id", id);
+                var filter = Builders<ResturantModel>.Filter.Eq("Name", Name);
                 _restaurants.DeleteOne(filter);
 
                 return new JsonResult("Deleted Successfully");
